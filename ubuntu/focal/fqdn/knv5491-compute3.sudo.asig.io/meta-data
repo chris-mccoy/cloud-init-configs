@@ -1,0 +1,201 @@
+---
+instance-id: 4B7C0AB7-FA27-A74F-9F41-ADE5FF4679C1
+local-hostname: knv5491-compute3.sudo.asig.io
+curtin:
+  # Can't use block_meta, since devices keep moving around
+  storage:
+    version: 1
+    config:
+      - id: disk0
+        type: disk
+        ptable: gpt
+        path: /dev/disk/by-id/wwn-0x55cd2e404c191c17
+        name: main_disk
+        wipe: superblock
+        grub_device: true
+
+      - id: disk0-part1
+        type: partition
+        number: 1
+        size: 1MB
+        device: disk0
+        flag: bios_grub
+
+      - id: disk0-part2
+        type: partition
+        number: 2
+        size: 4GB
+        device: disk0
+        flag: boot
+
+      - id: disk0-part3
+        type: partition
+        number: 3
+        size: 443GB
+        device: disk0
+
+      - id: disk0-part2-format-boot
+        type: format
+        fstype: ext4
+        volume: disk0-part2
+
+      - id: disk0-part2-mount-boot
+        type: mount
+        path: /boot
+        device: disk0-part2-format-boot
+
+      - id: disk0-part3-format-root
+        type: format
+        fstype: xfs
+        volume: disk0-part3
+
+      - id: disk0-part3-mount-root
+        type: mount
+        path: /
+        device: disk0-part3-format-root
+
+network:
+  - name: lo
+    content: |
+      # This interface is to provide an IP source for unnumbered interfaces,
+      # e.g. Cilium lxc...
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          lo:
+            match:
+              name: lo
+            addresses:
+              - 10.10.0.23/32
+
+  - name: enp25s0f0
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp25s0f0:
+            addresses:
+              - 10.20.1.23/22
+            nameservers:
+              addresses:
+                - 10.20.1.15
+            routes:
+              # System Backup
+              - to: 0.0.0.0/0
+                via: 10.20.1.1
+                metric: 64
+              # OOB Primary
+              - to: 0.0.0.0/0
+                via: 10.20.1.1
+                table: 100
+                metric: 0
+            routing-policy:
+              - priority: 10
+                from: 10.20.1.23
+                to: 10.20.0.0/22
+                table: 254
+              - priority: 20
+                from: 10.20.1.23
+                table: 100
+            link-local: []
+            accept-ra: false
+
+  - name: bond0
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp6s0:
+            link-local: []
+            optional: true
+          enp7s0:
+            link-local: []
+            optional: true
+        bonds:
+          bond0:
+            optional: true
+            interfaces:
+              - enp6s0
+              - enp7s0
+            mtu: 9000
+            parameters:
+              mode: 802.3ad
+              lacp-rate: fast
+              transmit-hash-policy: layer3+4
+            accept-ra: false
+            link-local: []
+            dhcp4: false
+            dhcp6: false
+
+  - name: bond1
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp10s0:
+            link-local: []
+            optional: true
+          enp11s0:
+            link-local: []
+            optional: true
+        bonds:
+          bond1:
+            optional: true
+            interfaces:
+              - enp10s0
+              - enp11s0
+            mtu: 1500
+            parameters:
+              mode: balance-xor
+              transmit-hash-policy: layer3+4
+            dhcp4: false
+            dhcp6: false
+            addresses:
+              - 10.10.1.23/24
+              - 10.10.1.123/24
+            accept-ra: true
+            link-local: [ ipv6 ]
+            routes:
+              - to: 0.0.0.0/0
+                via: 10.10.1.1
+                metric: 0
+            nameservers:
+              search:
+                - sudo.asig.io
+              addresses:
+                - 10.3.1.15
+
+  - name: bond2
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp12s0:
+            link-local: []
+            optional: true
+          enp13s0:
+            link-local: []
+            optional: true
+        bonds:
+          bond2:
+            optional: true
+            interfaces:
+              - enp12s0
+              - enp13s0
+            mtu: 9000
+            parameters:
+              mode: balance-xor
+              transmit-hash-policy: layer3+4
+            dhcp4: false
+            dhcp6: false
+            addresses:
+              - 10.11.1.23/24
+            accept-ra: false
+            link-local: []
+
+...

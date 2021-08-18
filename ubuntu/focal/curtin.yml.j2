@@ -1,0 +1,116 @@
+## template: jinja
+#cloud-config
+---
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+write_files:
+  - path: /etc/curtin/curtin.conf
+    permissions: '0600'
+    owner: root:root
+    content: |
+      #curtin-config
+
+      # Copy resultant system, set up by cloud-init
+      sources:
+        - cp:///
+
+{% if 'block_meta' in ds.meta_data.curtin %}
+      # Device where we install.  curtin doesn't like paths in /dev/disk for
+      # block-meta simple installs
+      block-meta: {{ ds.meta_data.curtin.block_meta | tojson }}
+{% endif %}
+{% if ds.meta_data.curtin and ds.meta_data.curtin.storage | default(False) %}
+      # For more complex storage configs that block-meta can't do
+      storage: {{ ds.meta_data.curtin.storage | tojson }}
+{% endif %}
+      grub:
+        # Keep serial console configs
+        terminal: unmodified
+        # Always boots from PXE otherwise
+{% if ds.meta_data.curtin and ds.meta_data.curtin.grub and ds.meta_data.curtin.grub.update_nvram | default(False) %}{{ 'u
+pdate_nvram: true' | indent(8, first=True) }}{% endif %}
+{% if ds.meta_data.curtin and ds.meta_data.curtin.grub and ds.meta_data.curtin.grub.reorder_uefi | default(False) %}{{ 're
+order_uefi: true' | indent(8, first=True) }}{% endif %}
+
+      early_commands: {}
+
+      partitioning_commands: {}
+
+      network_commands: {}
+
+      late_commands:
+        # Remove residue from overlayfs root
+        00_cmd: [ curtin, in-target, '--', rmdir, /media/root-ro ]
+        01_cmd: [ curtin, in-target, '--', rmdir, /media/root-rw ]
+
+        # Remove residue configs from curtin
+        02_cmd: [ curtin, in-target, '--', /bin/bash, -c, 'rm -rf /etc/update-motd.d/60-unminimize /etc/apt/sources.list.curtin.old /etc/cloud/cloud.cfg.d/50-curtin-networking.cfg' ]
+
+        # Remove initramfs hooks and utils used to boot over the network
+        # TODO cmm - boot over https
+        # 04_cmd: [ curtin, in-target, '--', bash, -c, 'rm /usr/share/initramfs-tools/hooks/{wget,addentropy,certs} /usr/local/bin/rndaddentropy' ]
+
+        # Remove curtin
+        06_cmd: [ curtin, in-target, '--', apt, remove, curtin, -y, --purge ]
+        07_cmd: [ curtin, in-target, '--', rm, -rf, /etc/curtin ]
+        08_cmd: [ curtin, in-target, '--', rm, "/var/lib/cloud/scripts/per-once/{99}curtin.sh" ]
+
+        # Pin instance-id to detect cloning and set up a fresh machine-id
+        09_cmd: [ curtin, in-target, '--', 'bash', '-c', 'mkdir -vp /var/lib/cloud/seed/nocloud && echo instance-id: $(cat /sys/class/dmi/id/product_uuid) > /var/lib/cloud/seed/nocloud/meta-data' ]
+        10_cmd: [ curtin, in-target, '--', 'bash', '-c', 'rm /etc/machine-id || true; systemd-machine-id-setup' ]
+
+        # Remove extraneous dependencies from packages removed earlier
+        90_cmd: [ curtin, in-target, '--', apt, autoremove, --purge, -y ]
+        91_cmd: [ curtin, in-target, '--', apt, clean ]
+
+  # Goofy naming with braces is because we have to run after runcmd,
+  # and scripts are sorted in lexical order
+  - path: "/var/lib/cloud/scripts/per-once/{99}curtin.sh"
+    permissions: '0700'
+    owner: root:root
+    content: |
+      #!/bin/bash
+      set -e
+      #set -x
+      if expr $(grep MemTotal /proc/meminfo | awk '{ print $2 }') \< 2000000; then
+        echo "!!! Not enough memory to install.  Machine must have 2GB or greater of RAM to continue.  Not continuing." | tee /dev/stderr | systemd-cat -p emerg
+        sleep 60
+        exit 1
+      fi
+      CURTIN_ARGS="-c /etc/curtin/curtin.conf"
+{# TODO cmm - fix curtin when using storage and EFI #}
+{% if 'block_meta' in ds.meta_data.curtin %}
+      DEFAULT_ESP_DEVICE="{{ ds.meta_data.curtin.block_meta.devices | first }}15"
+      if [ -d /sys/firmware/efi/efivars ]; then
+        FIRMWARE=efi
+      else
+        FIRMWARE=bios
+      fi
+      # HACK cmm - Apply ESP already mounted workaround for grub-multi-install
+      if [[ "$FIRMWARE" = "efi" ]]; then
+        CURTIN_ARGS+=" --set grub/install_devices=${DEFAULT_ESP_DEVICE}"
+      fi
+{% endif %}
+      CURTIN_ARGS+=" install"
+      if ( cloud-init status -l && curtin ${CURTIN_ARGS} ); then
+      # For when you don't want to run curtin
+      #if ( cloud-init status -l && /bin/true ); then
+        touch /run/ci-reboot-required
+      else
+        echo "!!! Curtin install or cloud-init has failed, not continuing." | tee /dev/stderr | systemd-cat -p emerg
+        sleep 60
+        exit 1
+      fi
+
+power_state:
+  delay: now
+  mode: reboot
+  message: Requested a reboot
+  # For when you need to keep the machine working to troubleshoot
+  condition: "/bin/false"
+  #condition: "bash -c 'test -e /run/ci-reboot-required && cloud-init status'"
+...

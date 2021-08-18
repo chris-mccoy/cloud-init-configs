@@ -1,0 +1,40 @@
+#cloud-config
+---
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+packages:
+  - libpam-ssh-agent-auth
+
+write_files:
+  # - content: |
+  #    # Allow members of group sudo to execute any command and not require a
+  #    # password.  Not a good practice for prod!
+  #    %sudo ALL=(ALL) NOPASSWD:ALL
+  #  path: /etc/sudoers.d/01-passwdless-sudo
+  #  permissions: '0644'
+  #  owner: root:root
+
+  - content: |
+      # Keep SSH_AUTH_SOCK around so libpam-ssh-agent-auth works
+      Defaults env_keep += "SSH_AUTH_SOCK"
+    path: /etc/sudoers.d/10-keep-ssh-auth-sock
+    permissions: '0644'
+    owner: root:root
+
+  - content: |
+      #%PAM-1.0
+      session    required   pam_env.so readenv=1 user_readenv=0
+      session    required   pam_env.so readenv=1 envfile=/etc/default/locale user_readenv=0
+      auth sufficient pam_ssh_agent_auth.so file=~/.ssh/authorized_keys
+      @include common-auth
+      @include common-account
+      @include common-session-noninteractive
+    path: /etc/pam.d/sudo
+    permissions: '0644'
+    owner: root:root
+
+...

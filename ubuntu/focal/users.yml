@@ -1,0 +1,35 @@
+#cloud-config
+---
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+users:
+  - name: cmm-local
+    gecos: cmm-local
+    primary_group: cmm-local
+    shell: /bin/bash
+    groups:
+      - users
+      - sudo
+      - adm
+      - cdrom
+      - dip
+      - plugdev
+      - lpadmin
+      - sambashare
+      - tls
+    lock_passwd: false
+    passwd: "$6$rounds=656000$l.mt21m55S/wf5fW$Qdu/27SP.9pjmEZEFgticDaztF\
+             Rwtm7aB6BzSeozD/S0V5noW/0T9IXknV2ntVr8zl8RMozCdtBFtdtJ5maCi0"
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsM6Q5mZ95HRIhdT5S/NTQ7yLT\
+         ejScpFWS6MA/KC8VSsoeRtX0kPW+tPW6y9b+vNPvgrUEWNjrca0/t+04fXmPslWW\
+         SVJIRWp02PDthRm/JHUdZa/q4T6f99nmh+2c3JhCQOsPZxAGZktX9ZQNAwbYF1gP\
+         ASI/zr4u52ONSe73Kbtdxh/98hZHlgTJLB2nst1tvxi3RiBeS62Y6cXizjQDXB1z\
+         SV5Kz11X279ORQfBwdS22v//l1M6D7NJP1rLYfWf1FrqCXeipc1rTqfYbOQEe5J0\
+         Jb/XXhFjtUlG9w31bscK1AjbpRSura+I+DlIuq8aKloL9K5DMwrvPK8pZRDb \
+         cmm@sudowoodo"
+...

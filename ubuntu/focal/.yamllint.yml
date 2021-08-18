@@ -1,0 +1,11 @@
+---
+extends: default
+
+rules:
+  comments:
+    require-starting-space: false
+  line-length:
+    max: 255
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+...

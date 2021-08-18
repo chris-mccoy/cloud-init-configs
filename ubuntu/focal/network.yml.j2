@@ -1,0 +1,59 @@
+## template: jinja
+#cloud-config
+---
+# Set up networking
+#
+# This config overrides cloud-init default networking with networking
+# configuration provided in instance metadata.  The configurations
+# we need with rules are too complex for cloud-init or curtin, so we'll
+# set them up manually.
+
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+manage_etc_hosts: true
+
+write_files:
+{% for interface in ds.meta_data.network %}
+  - path: /etc/netplan/{{ interface.name }}.yaml
+    permissions: '0644'
+    owner: 'root:root'
+    content: |
+      ---
+{{ interface.content | indent(6, first=True, blank=True) }}
+      ...
+{% endfor %}
+{% if ds.meta_data.systemd_networkd_network is defined %}
+{% for interface in ds.meta_data.systemd_networkd_network %}
+{% if interface.netdev_content is defined %}
+  - path: /etc/systemd/network/{{ interface.name }}.netdev
+    permissions: '0644'
+    owner: 'root:root'
+    content: |
+{{ interface.netdev_content | indent(6, first=True, blank=True) }}
+{% endif %}
+{% if interface.network_content is defined %}
+  - path: /etc/systemd/network/{{ interface.name }}.network
+    permissions: '0644'
+    owner: 'root:root'
+    content: |
+{{ interface.network_content | indent(6, first=True, blank=True) }}
+{% endif %}
+{% endfor %}
+{% endif %}
+    # Re-install the box if networking has to change, otherwise leave it alone
+  - path: /etc/cloud/cloud.cfg.d/99_disable_network.cfg
+    permissions: '0644'
+    owner: 'root:root'
+    content: |
+      manage_etc_hosts: true
+      network:
+        version: 1
+        config: disabled
+
+runcmd:
+  - rm /etc/netplan/50-cloud-init.yaml
+...

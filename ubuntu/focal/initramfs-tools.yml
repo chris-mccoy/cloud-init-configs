@@ -1,0 +1,14 @@
+#cloud-config
+---
+#
+# Remove old kernels from initramfs tools that got pulled in from squashfs
+#
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+bootcmd:
+  - [/bin/bash, -c, "rm -rf /var/lib/initramfs-tools/*-kvm /boot/*-kvm"]
+...

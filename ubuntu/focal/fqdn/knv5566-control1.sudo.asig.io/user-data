@@ -1,0 +1,3 @@
+#include
+http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/fqdn/knv5566-control1.sudo.asig.io/main.yml
+http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/common.include-url

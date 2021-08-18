@@ -1,0 +1,52 @@
+#cloud-config
+---
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+write_files:
+  - owner: root:root
+    path: /var/lib/cloud/seed/nocloud/user-data
+    permissions: '0644'
+    content: |
+      #cloud-config
+      {}
+
+  - owner: root:root
+    path: /usr/local/sbin/ci-detect-clone.sh
+    permissions: '0744'
+    content: |
+      #!/bin/bash
+      #set -x
+      set -e
+      # Detect if system was cloned.  If it is, wipe cloud-init sourced configs
+      SYSTEM_UUID="$(cat /sys/class/dmi/id/product_uuid)"
+      if ! grep "$SYSTEM_UUID" "/var/lib/cloud/seed/nocloud/meta-data" ; then
+        echo "Cloning detected!  Cleaning cloud-init and network configs" | systemd-cat -p emerg
+        cloud-init clean
+        # Netplan contains MAC addresses, so network stays down if cloned and MAC
+        # changes.
+        rm /etc/netplan/50-cloud-init.yaml || true
+        # This is used by systemd-networkd as a DHCP client ID, and thus the same
+        # IP will be assigned to clones, so we delete the machine-id and
+        # reinitialize.
+        # https://www.freedesktop.org/software/systemd/man/machine-id.html
+        # HACK cmm - Remove when this bug is fixed:
+        # https://bugs.launchpad.net/ubuntu/+source/cloud-init/+bug/1563951
+        rm /etc/machine-id || true
+        systemd-machine-id-setup
+        mkdir -vp "/var/lib/cloud/seed/nocloud"
+        echo "instance-id: $SYSTEM_UUID" > "/var/lib/cloud/seed/nocloud/meta-data"
+        echo "local-hostname: $(hostname -s)-clone" >> "/var/lib/cloud/seed/nocloud/meta-data"
+      fi
+
+  - owner: root:root
+    path: /etc/systemd/system/cloud-init-local.service.d/instance-id.conf
+    permissions: '0644'
+    content: |
+      [Service]
+      ExecStartPre=/usr/local/sbin/ci-detect-clone.sh
+
+...

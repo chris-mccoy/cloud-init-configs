@@ -1,0 +1,33 @@
+## template: jinja
+#cloud-config
+---
+#
+# Set up cloud-init
+#
+# This allows one to reconfigure a machine without reinstalling it by running
+# cloud-init clean && cloud-init init.  It's expected that cloud-init is already
+# installed.
+#
+
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+write_files:
+    # Refer to datasource from now on
+  - path: /etc/cloud/cloud.cfg.d/99_ds_nocloud.cfg
+    permissions: '0644'
+    owner: 'root:root'
+    content: |
+      #cloud-config
+      warnings:
+        dsid_missing_source: off
+      datasource_list: [ NoCloud ]
+      datasource:
+        NoCloud: {}
+
+runcmd:
+  - "cloud-init-per once rm-dpkg-cfg rm /etc/cloud/cloud.cfg.d/90_dpkg.cfg"
+...

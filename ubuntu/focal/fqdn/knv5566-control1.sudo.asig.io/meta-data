@@ -1,0 +1,153 @@
+---
+instance-id: 8664A7EC-6FE4-A347-A744-86AB85C04377
+local-hostname: knv5566-control1.sudo.asig.io
+curtin:
+  block_meta:
+    devices:
+      - /dev/sda
+
+network:
+  - name: lo
+    content: |
+      # This interface is to provide an IP source for unnumbered interfaces,
+      # e.g. Cilium lxc...
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          lo:
+            match:
+              name: lo
+            addresses:
+              - 10.10.0.11/32
+
+  - name: enp1s0f0
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp1s0f0:
+            addresses:
+              - 10.20.1.11/22
+            nameservers:
+              addresses:
+                - 10.20.1.15
+            routes:
+              # System Backup
+              - to: 0.0.0.0/0
+                via: 10.20.1.1
+                metric: 64
+              # OOB Primary
+              - to: 0.0.0.0/0
+                via: 10.20.1.1
+                table: 100
+                metric: 0
+            routing-policy:
+              - priority: 10
+                from: 10.20.1.11
+                to: 10.20.0.0/22
+                table: 254
+              - priority: 20
+                from: 10.20.1.11
+                table: 100
+            link-local: []
+            accept-ra: false
+
+  - name: bond0
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp9s0:
+            link-local: []
+            optional: true
+          enp10s0:
+            link-local: []
+            optional: true
+        bonds:
+          bond0:
+            optional: true
+            interfaces:
+              - enp9s0
+              - enp10s0
+            mtu: 9000
+            parameters:
+              mode: 802.3ad
+              lacp-rate: fast
+              transmit-hash-policy: layer3+4
+            accept-ra: false
+            link-local: []
+            dhcp4: false
+            dhcp6: false
+
+  - name: bond1
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp11s0:
+            link-local: []
+            optional: true
+          enp12s0:
+            link-local: []
+            optional: true
+        bonds:
+          bond1:
+            optional: true
+            interfaces:
+              - enp11s0
+              - enp12s0
+            mtu: 1500
+            parameters:
+              mode: balance-xor
+              transmit-hash-policy: layer3+4
+            dhcp4: false
+            dhcp6: false
+            addresses:
+              - 10.10.1.11/24
+              - 10.10.1.111/24
+            accept-ra: true
+            link-local: [ ipv6 ]
+            routes:
+              - to: 0.0.0.0/0
+                via: 10.10.1.1
+                metric: 0
+            nameservers:
+              search:
+                - sudo.asig.io
+              addresses:
+                - 10.3.1.15
+
+  - name: bond2
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp13s0:
+            link-local: []
+            optional: true
+          enp14s0:
+            link-local: []
+            optional: true
+        bonds:
+          bond2:
+            optional: true
+            interfaces:
+              - enp13s0
+              - enp14s0
+            mtu: 9000
+            parameters:
+              mode: balance-xor
+              transmit-hash-policy: layer3+4
+            dhcp4: false
+            dhcp6: false
+            addresses:
+              - 10.11.1.11/24
+            accept-ra: false
+            link-local: []
+
+...

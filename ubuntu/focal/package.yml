@@ -1,0 +1,22 @@
+#cloud-config
+---
+merge_how:
+  - name: list
+    settings: [append]
+  - name: dict
+    settings: [no_replace, recurse_list]
+
+apt:
+  preserve_sources_list: true
+  search_dns: false
+  # TODO cmm - Create a trusted local Ubuntu mirror
+  #primary:
+  #  - uri: http://deploy-o.sudo.asig.io/ubuntu
+  #    arches:
+  #      - amd64
+  #      - i386
+  #      - default
+
+package_update: true
+package_upgrade: true
+...
