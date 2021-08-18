@@ -16,7 +16,7 @@ merge_how:
     settings: [no_replace, recurse_list]
 
 write_files:
-    # Refer to datasource from now on
+  # Refer to datasource from now on
   - path: /etc/cloud/cloud.cfg.d/99_ds_nocloud.cfg
     permissions: '0644'
     owner: 'root:root'
