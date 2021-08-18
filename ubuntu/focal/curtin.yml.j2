@@ -27,6 +27,15 @@ write_files:
       # For more complex storage configs that block-meta can't do
       storage: {{ ds.meta_data.curtin.storage | tojson }}
 {% endif %}
+
+      # Kubernetes doesn't like swap, so we won't set that up
+      swap:
+        size: 0
+
+      ## Keep the install target around in case things go wrong
+      #install:
+      #  unmount: disabled
+
       grub:
         # Keep serial console configs
         terminal: unmodified
@@ -111,6 +120,6 @@ power_state:
   mode: reboot
   message: Requested a reboot
   # For when you need to keep the machine working to troubleshoot
-  condition: "/bin/false"
-  #condition: "bash -c 'test -e /run/ci-reboot-required && cloud-init status'"
+  #condition: "/bin/false"
+  condition: "bash -c 'test -e /run/ci-reboot-required && cloud-init status'"
 ...
