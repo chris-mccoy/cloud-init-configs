@@ -2,15 +2,14 @@
 instance-id: ec60a0c2-4a35-ef46-a876-e107cdcb2fcb
 local-hostname: knv5572-compute2.sudo.asig.io
 curtin:
-  # Can't use block_meta, since devices keep moving around
   storage:
     version: 1
     config:
       - id: disk0
         type: disk
         ptable: gpt
-        path: /dev/disk/by-id/wwn-0x55cd2e404b778a0a
-        name: main_disk
+        path: "/dev/disk/by-id/usb-CiscoVD_Hypervisor_012345678901-0:0"
+        name: boot_disk
         wipe: superblock
         grub_device: true
 
@@ -24,15 +23,9 @@ curtin:
       - id: disk0-part2
         type: partition
         number: 2
-        size: 4GB
+        size: 59GB
         device: disk0
         flag: boot
-
-      - id: disk0-part3
-        type: partition
-        number: 3
-        size: 443GB
-        device: disk0
 
       - id: disk0-part2-format-boot
         type: format
@@ -44,16 +37,28 @@ curtin:
         path: /boot
         device: disk0-part2-format-boot
 
-      - id: disk0-part3-format-root
+      - id: disk1
+        type: disk
+        ptable: gpt
+        path: /dev/disk/by-id/wwn-0x55cd2e404b778a0a
+        name: main_disk
+        wipe: superblock
+
+      - id: disk1-part1
+        type: partition
+        number: 1
+        size: 447GB
+        device: disk1
+
+      - id: disk1-part1-format-root
         type: format
         fstype: xfs
-        volume: disk0-part3
+        volume: disk1-part1
 
-      - id: disk0-part3-mount-root
+      - id: disk1-part1-mount-root
         type: mount
         path: /
-        device: disk0-part3-format-root
-
+        device: disk1-part1-format-root
 
 network:
   - name: lo

@@ -2,9 +2,63 @@
 instance-id: 323237FB-3130-B246-940C-12C11BB8A3ED
 local-hostname: knv5563-control2.sudo.asig.io
 curtin:
-  block_meta:
-    devices:
-      - /dev/sda
+  storage:
+    version: 1
+    config:
+      - id: disk0
+        type: disk
+        ptable: gpt
+        path: "/dev/disk/by-id/usb-CiscoVD_Hypervisor_012345678901-0:0"
+        name: boot_disk
+        wipe: superblock
+        grub_device: true
+
+      - id: disk0-part1
+        type: partition
+        number: 1
+        size: 1MB
+        device: disk0
+        flag: bios_grub
+
+      - id: disk0-part2
+        type: partition
+        number: 2
+        size: 59GB
+        device: disk0
+        flag: boot
+
+      - id: disk0-part2-format-boot
+        type: format
+        fstype: ext4
+        volume: disk0-part2
+
+      - id: disk0-part2-mount-boot
+        type: mount
+        path: /boot
+        device: disk0-part2-format-boot
+
+      - id: disk1
+        type: disk
+        ptable: gpt
+        path: /dev/disk/by-id/wwn-0x678da6e715c8a1f022025299e2942634
+        name: main_disk
+        wipe: superblock
+
+      - id: disk1-part1
+        type: partition
+        number: 1
+        size: 2TB
+        device: disk1
+
+      - id: disk1-part1-format-root
+        type: format
+        fstype: xfs
+        volume: disk1-part1
+
+      - id: disk1-part1-mount-root
+        type: mount
+        path: /
+        device: disk1-part1-format-root
 
 network:
   - name: lo
