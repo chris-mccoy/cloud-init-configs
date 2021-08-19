@@ -204,4 +204,18 @@ network:
             accept-ra: false
             link-local: []
 
+# Kubernetes API Anycast
+systemd_networkd_network:
+  - name: dummy0
+    netdev_content: |
+      [NetDev]
+      Name=dummy0
+      Kind=dummy
+      MTUBytes=9000
+    network_content: |
+      [Match]
+      Name=dummy0
+
+      [Network]
+      Address=10.3.0.5/32
 ...
