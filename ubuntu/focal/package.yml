@@ -19,4 +19,8 @@ apt:
 
 package_update: true
 package_upgrade: true
+
+runcmd:
+  - "systemctl disable unattended-upgrades.service"
+  - "systemctl stop unattended-upgrades.service"
 ...
