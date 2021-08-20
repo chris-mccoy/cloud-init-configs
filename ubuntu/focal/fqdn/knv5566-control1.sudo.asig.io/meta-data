@@ -142,18 +142,18 @@ network:
         version: 2
         renderer: networkd
         ethernets:
-          enp11s0:
+          enp13s0:
             link-local: []
             optional: true
-          enp12s0:
+          enp14s0:
             link-local: []
             optional: true
         bonds:
           bond1:
             optional: true
             interfaces:
-              - enp11s0
-              - enp12s0
+              - enp13s0
+              - enp14s0
             mtu: 1500
             parameters:
               mode: balance-xor
@@ -181,18 +181,18 @@ network:
         version: 2
         renderer: networkd
         ethernets:
-          enp13s0:
+          enp15s0:
             link-local: []
             optional: true
-          enp14s0:
+          enp16s0:
             link-local: []
             optional: true
         bonds:
           bond2:
             optional: true
             interfaces:
-              - enp13s0
-              - enp14s0
+              - enp15s0
+              - enp16s0
             mtu: 9000
             parameters:
               mode: balance-xor
