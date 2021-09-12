@@ -2,4 +2,4 @@
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/fqdn/knv5563-control2.sudo.asig.io/main.yml
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/common.include-url
 # Comment out to disable install
-http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/curtin.yml
+http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/curtin.yml.j2
