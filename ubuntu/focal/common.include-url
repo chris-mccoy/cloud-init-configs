@@ -7,4 +7,3 @@ http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/package.yml
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/metadata.yml
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/initramfs-tools.yml
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/ds-nocloud-on-disk.yml
-http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/curtin.yml.j2

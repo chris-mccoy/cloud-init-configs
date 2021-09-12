@@ -1,3 +1,5 @@
 #include
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/fqdn/knv5570-compute1.sudo.asig.io/main.yml
 http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/common.include-url
+# Comment out to disable install
+http://deploy-o.sudo.asig.io/cloud-init/ubuntu/focal/curtin.yml

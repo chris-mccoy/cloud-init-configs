@@ -75,13 +75,13 @@ network:
             addresses:
               - 10.10.0.23/32
 
-  - name: enp25s0f0
+  - name: eno1
     content: |
       network:
         version: 2
         renderer: networkd
         ethernets:
-          enp25s0f0:
+          eno1:
             addresses:
               - 10.20.1.23/22
             nameservers:
