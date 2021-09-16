@@ -22,6 +22,7 @@ users:
       - sambashare
       - tls
     lock_passwd: false
+    # cmm - Yes, this is here on purpose.  Good luck cracking it you animal.
     passwd: "$6$rounds=656000$l.mt21m55S/wf5fW$Qdu/27SP.9pjmEZEFgticDaztF\
              Rwtm7aB6BzSeozD/S0V5noW/0T9IXknV2ntVr8zl8RMozCdtBFtdtJ5maCi0"
     ssh_authorized_keys:
